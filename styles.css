@@ -1,7 +1,7 @@
 :root {
   --primary-color: #f97316;
   --primary-hover: #ea580c;
-  --text-color: #1f2937;
+  --text-color: #1C2023;
   --text-secondary: #4b5563;
   --background-color: #f9fafb;
   --card-background: #ffffff;
@@ -26,13 +26,15 @@
   --primary-hover: #fdba74;
   --text-color: #f9fafb;
   --text-secondary: #d1d5db;
-  --background-color: #111827;
-  --card-background: #1f2937;
-  --border-color: #374151;
-  --input-background: #374151;
+  --background-color: #17191A;
+  --card-background: #1C2023;
+  --border-color: #272625;
+  --input-background: #272625;
   --input-border: #4b5563;
   --input-focus: #fb923c;
 }
+
+
 
 * {
   box-sizing: border-box;
