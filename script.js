@@ -19,46 +19,43 @@ function showToast(message, type = 'success') {
   const toastContainer = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
-  toast.textContent = message;
+  
+  const icon = document.createElement('span');
+  if (type === 'success') {
+    icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+  } else {
+    icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>';
+  }
+  
+  const text = document.createElement('span');
+  text.textContent = message;
+  
+  toast.appendChild(icon);
+  toast.appendChild(text);
   toastContainer.appendChild(toast);
   
-  // Remove toast after 3 seconds
   setTimeout(() => {
     toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
     setTimeout(() => {
-      toastContainer.removeChild(toast);
+      toast.remove();
     }, 300);
   }, 3000);
 }
 
 // Copy text to clipboard
 function copyToClipboard(text) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        showToast('Copied to clipboard!');
-      })
-      .catch(() => {
-        showToast('Failed to copy to clipboard', 'error');
-      });
-  } else {
-    // Fallback for browsers that don't support clipboard API
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Copied to clipboard!');
+    const copyButton = document.getElementById('copy-button');
+    copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg><span>Copied!</span>';
     
-    try {
-      const successful = document.execCommand('copy');
-      showToast(successful ? 'Copied to clipboard!' : 'Failed to copy to clipboard', successful ? 'success' : 'error');
-    } catch (err) {
-      showToast('Failed to copy to clipboard', 'error');
-    }
-    
-    document.body.removeChild(textarea);
-  }
+    setTimeout(() => {
+      copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg><span>Copy</span>';
+    }, 2000);
+  }).catch(err => {
+    showToast('Failed to copy text', 'error');
+  });
 }
 
 // Show error message
@@ -82,14 +79,14 @@ function setLoading(isLoading) {
   const spinner = submitButton.querySelector('.spinner');
   const buttonText = submitButton.querySelector('span');
   
+  submitButton.disabled = isLoading;
+  
   if (isLoading) {
     spinner.classList.remove('hidden');
     buttonText.textContent = 'Improving...';
-    submitButton.disabled = true;
   } else {
     spinner.classList.add('hidden');
     buttonText.textContent = 'Improve Message';
-    submitButton.disabled = false;
   }
 }
 
@@ -97,13 +94,14 @@ function setLoading(isLoading) {
 function toggleCustomInstructions() {
   const container = document.getElementById('custom-instructions-container');
   const toggleIcon = document.getElementById('toggle-icon');
-  const isHidden = container.classList.contains('hidden');
   
-  if (isHidden) {
+  if (container.classList.contains('hidden')) {
     container.classList.remove('hidden');
-    toggleIcon.style.transform = 'rotate(90deg)';
+    toggleIcon.textContent = '▼';
+    toggleIcon.style.transform = 'rotate(0deg)';
   } else {
     container.classList.add('hidden');
+    toggleIcon.textContent = '▶';
     toggleIcon.style.transform = 'rotate(0deg)';
   }
 }
@@ -112,8 +110,9 @@ function toggleCustomInstructions() {
 function showApiKeyModal() {
   const modal = document.getElementById('api-key-modal');
   if (modal) {
-    modal.classList.add('visible');
-    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+    modal.classList.remove('hidden');
+    // Add no-scroll to body when modal is open
+    document.body.style.overflow = 'hidden';
   }
 }
 
@@ -121,22 +120,24 @@ function showApiKeyModal() {
 function hideApiKeyModal() {
   const modal = document.getElementById('api-key-modal');
   if (modal) {
-    modal.classList.remove('visible');
-    document.body.style.overflow = ''; // Restore scrolling
+    modal.classList.add('hidden');
+    // Remove no-scroll from body when modal is closed
+    document.body.style.overflow = '';
+    console.log('Modal hidden - function called');
   }
 }
 
 // Clear saved API key
 function clearSavedApiKey() {
-  localStorage.removeItem('api-key');
+  localStorage.removeItem('gemini_api_key');
   document.getElementById('api-key').value = '';
   document.getElementById('remember-api-key').checked = false;
-  showToast('API key cleared from local storage');
+  showToast('Saved API key has been cleared');
 }
 
 // Load saved API key
 function loadSavedApiKey() {
-  const savedApiKey = localStorage.getItem('api-key');
+  const savedApiKey = localStorage.getItem('gemini_api_key');
   if (savedApiKey) {
     document.getElementById('api-key').value = savedApiKey;
     document.getElementById('remember-api-key').checked = true;
@@ -146,45 +147,57 @@ function loadSavedApiKey() {
 // Improve message using Google Generative AI
 async function improveMessage(message, tone, template, customInstructions, apiKey) {
   try {
-    // Initialize the API client
-    const genAI = new window.GoogleGenerativeAI(apiKey);
+    // Initialize the Generative AI API
+    const genAI = new GoogleGenerativeAI(apiKey);
     
-    // Try to use the Gemini Pro model, fall back to Gemini if not available
-    let model;
-    try {
-      model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    } catch (error) {
-      console.log('Falling back to gemini model');
-      model = genAI.getGenerativeModel({ model: "gemini" });
-    }
-    
-    // Build the prompt
-    let prompt = `Improve the following message to make it more ${tone}`;
-    
-    if (template !== 'none') {
-      prompt += ` and format it as a ${template.replace(/-/g, ' ')}`;
-    }
-    
-    prompt += ':\n\n' + message;
+    // Create the prompt
+    let prompt = `Improve the following message to make it ${tone || "professional"} and ${template !== 'none' ? template : "concise"}. Return ONLY the improved message as plain text, without any markdown formatting, explanations, or additional content.`;
     
     if (customInstructions) {
-      prompt += `\n\nAdditional instructions: ${customInstructions}`;
+      prompt += ` Additional instructions: ${customInstructions}`;
     }
     
-    // Set a timeout for the API call
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
-    });
+    prompt += `\n\nMessage to improve: ${message}`;
     
-    // Make the API call with timeout
-    const responsePromise = model.generateContent(prompt);
-    const response = await Promise.race([responsePromise, timeoutPromise]);
+    // Try different model versions in order of preference
+    const modelVersions = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro"];
+    let result = null;
+    let lastError = null;
     
-    const result = response.response;
-    return result.text();
+    for (const modelVersion of modelVersions) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelVersion });
+        
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            reject(new Error(`Request to ${modelVersion} timed out after 25 seconds`));
+          }, 25000);
+        });
+        
+        // Race the model request against the timeout
+        result = await Promise.race([
+          model.generateContent(prompt),
+          timeoutPromise
+        ]);
+        
+        break; // If successful, exit the loop
+      } catch (error) {
+        lastError = error;
+        console.error(`Error with model ${modelVersion}:`, error);
+        // Continue to the next model version
+      }
+    }
+    
+    if (!result) {
+      throw new Error(lastError || 'Failed to improve message with any model version');
+    }
+    
+    const response = result.response;
+    return response.text();
   } catch (error) {
     console.error('Error improving message:', error);
-    throw new Error(error.message || 'Failed to improve message. Please try again.');
+    throw error;
   }
 }
 
@@ -192,49 +205,55 @@ async function improveMessage(message, tone, template, customInstructions, apiKe
 async function handleSubmit(event) {
   event.preventDefault();
   
-  // Hide any previous errors
-  hideError();
-  
   // Get form values
-  const apiKey = document.getElementById('api-key').value.trim();
   const message = document.getElementById('message').value.trim();
   const tone = document.getElementById('tone').value;
   const template = document.getElementById('template').value;
-  const customInstructions = document.getElementById('custom-instructions')?.value.trim() || '';
+  const customInstructions = document.getElementById('custom-instructions').value.trim();
+  const apiKey = document.getElementById('api-key').value.trim();
   const rememberApiKey = document.getElementById('remember-api-key').checked;
   
-  // Validate inputs
-  if (!apiKey) {
-    showError('Please enter your Google API key');
-    return;
-  }
-  
+  // Validate form
   if (!message) {
     showError('Please enter a message to improve');
     return;
   }
   
+  if (!apiKey) {
+    showError('Please enter your Google API key');
+    return;
+  }
+  
+  // Hide previous results and errors
+  hideError();
+  document.getElementById('result-container').classList.add('hidden');
+  
   // Save API key if remember is checked
   if (rememberApiKey) {
-    localStorage.setItem('api-key', apiKey);
+    localStorage.setItem('gemini_api_key', apiKey);
+  } else {
+    localStorage.removeItem('gemini_api_key');
   }
   
   // Set loading state
   setLoading(true);
   
   try {
-    // Improve the message
+    // Improve message
     const improvedMessage = await improveMessage(message, tone, template, customInstructions, apiKey);
     
-    // Display the result
+    // Display result
     document.getElementById('improved-message').textContent = improvedMessage;
     document.getElementById('result-container').classList.remove('hidden');
     
-    // Scroll to result
-    document.getElementById('result-container').scrollIntoView({ behavior: 'smooth' });
+    // Show success toast
+    showToast('Message improved successfully!');
   } catch (error) {
-    showError(error.message);
+    // Show error message
+    showError(error.message || 'Failed to improve message. Please try again.');
+    showToast('Failed to improve message', 'error');
   } finally {
+    // Reset loading state
     setLoading(false);
   }
 }
@@ -262,35 +281,36 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Set up modal close handlers
   const closeModalBtn = document.getElementById('close-modal');
+  const closeModalFooterBtn = document.getElementById('close-modal-btn');
   const modal = document.getElementById('api-key-modal');
   
+  // Handler for the top close button
   if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', hideApiKeyModal);
+    closeModalBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Close button clicked');
+      hideApiKeyModal();
+    });
   }
   
-  // Close modal when clicking outside of it
+  // Handler for the footer close button
+  if (closeModalFooterBtn) {
+    closeModalFooterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      console.log('Footer close button clicked');
+      hideApiKeyModal();
+    });
+  }
+  
+  // Handler for clicking outside the modal
   if (modal) {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
+        console.log('Outside modal clicked');
         hideApiKeyModal();
       }
     });
-    
-    // Prevent clicks inside modal content from closing the modal
-    const modalContent = modal.querySelector('.modal-content');
-    if (modalContent) {
-      modalContent.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
-    }
   }
-  
-  // Add keyboard support for closing modal with Escape key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal && modal.classList.contains('visible')) {
-      hideApiKeyModal();
-    }
-  });
   
   // Add copy button event listener
   const copyButton = document.getElementById('copy-button');
@@ -300,4 +320,61 @@ document.addEventListener('DOMContentLoaded', () => {
       copyToClipboard(improvedMessage);
     });
   }
+  
+  // Prevent modal content clicks from closing the modal
+  const modalContent = modal?.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
+  
+  // Add keyboard support for closing modal
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal?.classList.contains('hidden')) {
+      hideApiKeyModal();
+    }
+  });
+});
+
+// Modal functionality
+document.addEventListener('DOMContentLoaded', () => {
+  const apiKeyModal = document.getElementById('api-key-modal');
+  const closeModalBtn = document.getElementById('close-modal');
+  const apiKeyInfoBtn = document.getElementById('api-key-info'); // You'll need to add this button
+
+  // Function to open modal
+  function openModal() {
+    apiKeyModal.classList.add('visible');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
+  }
+
+  // Function to close modal
+  function closeModal() {
+    apiKeyModal.classList.remove('visible');
+    document.body.style.overflow = '';
+  }
+
+  // Event listeners
+  if (apiKeyInfoBtn) {
+    apiKeyInfoBtn.addEventListener('click', openModal);
+  }
+  
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+  }
+
+  // Close modal when clicking outside of it
+  apiKeyModal.addEventListener('click', (e) => {
+    if (e.target === apiKeyModal) {
+      closeModal();
+    }
+  });
+
+  // Close modal with Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && apiKeyModal.classList.contains('visible')) {
+      closeModal();
+    }
+  });
 }); 
