@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrammAI - AI-Powered Message Improvement</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module">
+    import { GoogleGenerativeAI } from 'https://esm.run/@google/generative-ai';
+    window.GoogleGenerativeAI = GoogleGenerativeAI;
+  </script>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">GrammAI</div>
+      <button id="theme-toggle" aria-label="Toggle theme">
+        <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+        <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <div class="card-header">
+        <h1>Now it's time to write what your customer wants to read.</h1>
+        <p>Enter your message below and we'll help you improve it.</p>
+      </div>
+      <div class="card-content">
+        <form id="message-form">
+          <div class="form-group">
+            <label for="api-key">Google API Key</label>
+            <div class="api-key-container">
+              <input type="password" id="api-key" name="api-key" required placeholder="Enter your Google API key">
+              <button type="button" id="api-key-info" class="info-button" aria-label="API key information">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+              </button>
+              <div class="api-key-actions">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="remember-api-key">
+                  <span class="checkmark"></span>
+                  Remember API key
+                </label>
+                <button type="button" id="clear-api-key" class="text-button">Clear saved key</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="message">Your Message</label>
+            <textarea id="message" name="message" rows="6" required placeholder="Type your message here..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group half">
+              <label for="tone">Tone</label>
+              <select id="tone" name="tone">
+                <option value="professional">Professional</option>
+                <option value="friendly">Friendly</option>
+                <option value="empathetic">Empathetic</option>
+                <option value="formal">Formal</option>
+                <option value="casual">Casual</option>
+              </select>
+            </div>
+            <div class="form-group half">
+              <label for="template">Template</label>
+              <select id="template" name="template">
+                <option value="none">None</option>
+                <option value="follow-up-email">Follow-up Email</option>
+                <option value="ticket-follow-up">Ticket Follow-up</option>
+                <option value="customer-support">Customer Support</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <button type="button" id="toggle-custom-instructions" class="text-button">
+              <span id="toggle-icon">▶</span> Add custom instructions
+            </button>
+            <div id="custom-instructions-container" class="hidden">
+              <textarea id="custom-instructions" name="custom-instructions" rows="3" placeholder="Add any specific instructions for improving your message..."></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="submit-button" class="primary-button">
+              <span>Improve Message</span>
+              <div class="spinner hidden"></div>
+            </button>
+          </div>
+        </form>
+
+        <div id="result-container" class="hidden">
+          <div class="result-header">
+            <h2>Improved Message</h2>
+            <button id="copy-button" class="icon-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div id="improved-message" class="result-content"></div>
+        </div>
+
+        <div id="error-container" class="hidden">
+          <div class="error-message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>
+            <span id="error-text"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast-container"></div>
+  
+  <!-- API Key Info Modal -->
+  <div id="api-key-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>About Google API Key</h2>
+        <button id="close-modal" class="close-button" type="button" aria-label="Close modal">×</button>
+      </div>
+      <div class="modal-body">
+        <p>To use GrammAI, you need a Google API key with access to the Gemini API.</p>
+        <ol>
+          <li>Go to <a href="https://makersuite.google.com/app/apikey" target="_blank">Google AI Studio</a></li>
+          <li>Create an API key or use an existing one</li>
+          <li>Copy the API key and paste it in the field above</li>
+        </ol>
+        <p>Your API key is used only for processing your requests and is not stored on our servers.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html> 
