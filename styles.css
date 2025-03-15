@@ -715,4 +715,21 @@ select[multiple] option:hover {
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   font-weight: 500;
+}
+
+.template-option {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+
+.template-option:hover {
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.template-option.selected {
+  background-color: rgba(249, 115, 22, 0.2);
+  color: var(--primary-color);
+  font-weight: 500;
 } 

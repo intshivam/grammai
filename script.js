@@ -273,7 +273,7 @@ async function handleSubmit(event) {
   // Get form values
   const message = document.getElementById('message').value.trim();
   const selectedTones = window.getSelectedTones();
-  const template = document.getElementById('template').value;
+  const template = window.getSelectedTemplate();
   const customInstructions = document.getElementById('custom-instructions').value.trim();
   const apiKey = document.getElementById('api-key').value.trim();
   const rememberApiKey = document.getElementById('remember-api-key').checked;
@@ -408,6 +408,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize tone selection
   initializeToneSelection();
+  
+  // Initialize template selection
+  initializeTemplateSelection();
 });
 
 // Modal functionality
@@ -450,4 +453,59 @@ document.addEventListener('DOMContentLoaded', () => {
       closeModal();
     }
   });
-}); 
+});
+
+function initializeTemplateSelection() {
+  const dropdown = document.getElementById('template-dropdown');
+  const selectedDisplay = dropdown.querySelector('.dropdown-selected span');
+  const menu = dropdown.querySelector('.dropdown-menu');
+  let selectedTemplate = 'none'; // Default value
+
+  // Toggle dropdown
+  dropdown.querySelector('.dropdown-selected').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+
+  // Prevent menu clicks from closing dropdown
+  menu.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Handle template selection
+  menu.querySelectorAll('.template-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const value = option.dataset.value;
+      
+      // Remove selected class from all options
+      menu.querySelectorAll('.template-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
+      
+      // Add selected class to clicked option
+      option.classList.add('selected');
+      
+      // Update selected value and display
+      selectedTemplate = value;
+      selectedDisplay.textContent = option.textContent;
+      
+      // Close dropdown after selection
+      dropdown.classList.remove('open');
+    });
+  });
+
+  // Add function to get selected template
+  window.getSelectedTemplate = () => selectedTemplate;
+
+  // Close dropdown when pressing Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.classList.remove('open');
+    }
+  });
+} 
