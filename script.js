@@ -145,13 +145,17 @@ function loadSavedApiKey() {
 }
 
 // Improve message using Google Generative AI
-async function improveMessage(message, tone, template, customInstructions, apiKey) {
+async function improveMessage(message, tones, template, customInstructions, apiKey) {
   try {
-    // Initialize the Generative AI API
     const genAI = new GoogleGenerativeAI(apiKey);
     
+    // Convert tones array to a readable string
+    const tonesString = Array.isArray(tones) && tones.length > 0 
+      ? tones.join(' and ') 
+      : "professional";
+    
     // Create the prompt
-    let prompt = `Improve the following message to make it ${tone || "professional"} and ${template !== 'none' ? template : "concise"}. Return ONLY the improved message as plain text, without any markdown formatting, explanations, or additional content.`;
+    let prompt = `Improve the following message to make it ${tonesString} and ${template !== 'none' ? template : "concise"}. Return ONLY the improved message as plain text, without any markdown formatting, explanations, or additional content.`;
     
     if (customInstructions) {
       prompt += ` Additional instructions: ${customInstructions}`;
@@ -201,13 +205,74 @@ async function improveMessage(message, tone, template, customInstructions, apiKe
   }
 }
 
-// Handle form submission
+// Add this function to initialize tone selection
+function initializeToneSelection() {
+  const dropdown = document.getElementById('tone-dropdown');
+  const selectedDisplay = dropdown.querySelector('.dropdown-selected span');
+  const menu = dropdown.querySelector('.dropdown-menu');
+  const selectedTones = new Set();
+
+  // Toggle dropdown
+  dropdown.querySelector('.dropdown-selected').addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', () => {
+    dropdown.classList.remove('open');
+  });
+
+  // Prevent menu clicks from closing dropdown
+  menu.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Handle tone selection
+  menu.querySelectorAll('.tone-option').forEach(option => {
+    option.addEventListener('click', () => {
+      const value = option.dataset.value;
+      
+      if (selectedTones.has(value)) {
+        selectedTones.delete(value);
+        option.classList.remove('selected');
+      } else {
+        selectedTones.add(value);
+        option.classList.add('selected');
+      }
+
+      // Update selected display
+      updateSelectedDisplay();
+    });
+  });
+
+  // Function to update the selected tones display
+  function updateSelectedDisplay() {
+    if (selectedTones.size === 0) {
+      selectedDisplay.textContent = 'Select tones...';
+    } else {
+      selectedDisplay.textContent = Array.from(selectedTones).join(', ');
+    }
+  }
+
+  // Add function to get selected tones
+  window.getSelectedTones = () => Array.from(selectedTones);
+
+  // Close dropdown when pressing Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      dropdown.classList.remove('open');
+    }
+  });
+}
+
+// Update the handleSubmit function to use the new tone selection
 async function handleSubmit(event) {
   event.preventDefault();
   
   // Get form values
   const message = document.getElementById('message').value.trim();
-  const tone = document.getElementById('tone').value;
+  const selectedTones = window.getSelectedTones();
   const template = document.getElementById('template').value;
   const customInstructions = document.getElementById('custom-instructions').value.trim();
   const apiKey = document.getElementById('api-key').value.trim();
@@ -221,6 +286,11 @@ async function handleSubmit(event) {
   
   if (!apiKey) {
     showError('Please enter your Google API key');
+    return;
+  }
+  
+  if (selectedTones.length === 0) {
+    showError('Please select at least one tone');
     return;
   }
   
@@ -240,7 +310,7 @@ async function handleSubmit(event) {
   
   try {
     // Improve message
-    const improvedMessage = await improveMessage(message, tone, template, customInstructions, apiKey);
+    const improvedMessage = await improveMessage(message, selectedTones, template, customInstructions, apiKey);
     
     // Display result
     document.getElementById('improved-message').textContent = improvedMessage;
@@ -335,6 +405,9 @@ document.addEventListener('DOMContentLoaded', () => {
       hideApiKeyModal();
     }
   });
+  
+  // Initialize tone selection
+  initializeToneSelection();
 });
 
 // Modal functionality
